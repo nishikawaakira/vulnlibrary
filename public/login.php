@@ -13,30 +13,28 @@ $error = false;
 
 // ログイン処理
 if (!empty($_POST['user'])) {
-    
-    // 全体的でmysql_xxx 系の関数を利用していますが、mysql_xxx系は非推奨です。
-    // mysqli_xxx 系を使うようにしましょう
-    $link = mysql_connect(DB_ADDR, DB_USER, DB_PASS);
+
+    $link = mysqli_connect(DB_ADDR, DB_USER, DB_PASS, DB_NAME);
     if (!$link) {
-        die('接続失敗です。'.mysql_error());
+        die('接続失敗です。'.mysqli_error($link));
     }
-    
-    $db_selected = mysql_select_db(DB_NAME, $link);
+
+    $db_selected = mysqli_select_db($link, DB_NAME);
     if (!$db_selected){
-        die('データベース選択失敗です。'.mysql_error());
+        die('データベース選択失敗です。'.mysqli_error($link));
     }
-    mysql_set_charset('utf8');
-    
+    mysqli_set_charset($link, 'utf8');
+
     $loginId = $_POST['user']['login_id'];
     $passwd = $_POST['user']['passwd'];
-    
+
     $sql = "SELECT * FROM users WHERE login_id='{$loginId}' AND passwd='{$passwd}'";
-    $result = mysql_query($sql);
+    $result = mysqli_query($link, $sql);
     if (!$result) {
-        die('クエリーが失敗しました。'.mysql_error());
+        die('クエリーが失敗しました。'.mysqli_error($link));
     }
-    
-    $row = mysql_fetch_assoc($result);
+
+    $row = mysqli_fetch_assoc($result);
     if ($row) {
         // ログインに成功
         $_SESSION['user'] = $row;
@@ -46,7 +44,7 @@ if (!empty($_POST['user'])) {
         // ログインに失敗
         $error = true;
     }
-    mysql_close($link);
+    mysqli_close($link);
 }
 ?>
 <!DOCTYPE html>
@@ -70,39 +68,35 @@ if (!empty($_POST['user'])) {
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">脆弱図書館</a>
+                <a class="navbar-brand" href="/">脆弱図書館</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="./">トップ</a></li>
+                    <li><a href="/">トップ</a></li>
                     <li><a href="search.php">検索</a></li>
                     <li><a href="contact.php">お問い合わせ</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <?php if ($isLogged):?>
-                        <li class="active"><a href="logout.php">ログアウト <span class="sr-only">(current)</span></a></li>
-                        <?php else:?>
-                        <li class="active"><a href="login.php">ログイン</a></li>
-                    <?php endif;?>
+                    <li class="active"><a href="login.php">ログイン</a></li>
                 </ul>
             </div><!--/.nav-collapse -->
         </div>
     </nav>
-    
-    
+
+
     <div class="container">
-        
+
         <div class="jumbotron">
             <h1>ログイン</h1>
             <form name="login-form" id="login-form" action="" method="post">
-                
+
                 <?php if ($error):?>
                     <div class="alert alert-danger">
                         <?php // このようにログインIDが間違っているのかパスワードが間違っているのかわからないようにしましょう ?>
                         ログインIDかパスワードが間違っています。
                     </div>
                 <?php endif;?>
-                
+
                 <table class="table table-striped table-bordered">
                     <tr>
                         <th>ログインID</th>

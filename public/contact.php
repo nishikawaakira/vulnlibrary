@@ -28,19 +28,22 @@ if (!empty($_SESSION['user'])) {
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">脆弱図書館</a>
+                <a class="navbar-brand" href="/">脆弱図書館</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="./">トップ</a></li>
+                    <li><a href="/">トップ</a></li>
                     <li><a href="search.php">検索</a></li>
                     <?php if ($isLogged):?>
-                        <li><a href="rent.php">借りた本一覧</a></li>
+                        <li><a href="rent.php?user_id=<?php echo $_SESSION['user']['id'];?>">借りた本一覧</a></li>
                     <?php endif;?>
                     <li class="active"><a href="contact.php">お問い合わせ</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <?php if ($isLogged):?>
+                        <li><?php if ($_SESSION['user']['is_admin']==1) echo '<a href="#">【管理者です】</a>'; ?></li>
+                        <li><a href="setting.php">アカウント更新</a></li>
+                        <?php if ($_SESSION['user']['is_admin']==1):?><li><a href="contact_admin.php">お問い合わせ一覧</a></li><?php endif;?>
                         <li class="active"><a href="logout.php">ログアウト <span class="sr-only">(current)</span></a></li>
                         <?php else:?>
                         <li><a href="login.php">ログイン</a></li>
@@ -49,8 +52,8 @@ if (!empty($_SESSION['user'])) {
             </div><!--/.nav-collapse -->
         </div>
     </nav>
-    
-    
+
+
     <div class="container">
         <h1>お問い合わせ</h1>
         <form name="contactForm" id="contactForm" action="contact_entry.php" method="post">
@@ -65,7 +68,7 @@ if (!empty($_SESSION['user'])) {
                 <tr>
                     <th>メールアドレス</th>
                     <td>
-                        <input type="email" name="email" value="" class="form-control" />
+                        <input type="email" name="email" value="" class="form-control" required />
                     </td>
                 </tr>
                 <tr>

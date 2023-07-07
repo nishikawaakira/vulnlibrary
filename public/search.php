@@ -8,18 +8,16 @@ if (!empty($_SESSION['user'])) {
     $isLogged = true;
 }
 
-// 全体的でmysql_xxx 系の関数を利用していますが、mysql_xxx系は非推奨です。
-// mysqli_xxx 系を使うようにしましょう
-$link = mysql_connect(DB_ADDR, DB_USER, DB_PASS);
+$link = mysqli_connect(DB_ADDR, DB_USER, DB_PASS, DB_NAME);
 if (!$link) {
-    die('接続失敗です。'.mysql_error());
+    die('接続失敗です。'.mysqli_error($link));
 }
 
-$db_selected = mysql_select_db(DB_NAME, $link);
+$db_selected = mysqli_select_db($link, DB_NAME);
 if (!$db_selected){
-    die('データベース選択失敗です。'.mysql_error());
+    die('データベース選択失敗です。'.mysqli_error($link));
 }
-mysql_set_charset('utf8');
+mysqli_set_charset($link, 'utf8');
 
 $selectWord = '';
 $word = '';
@@ -29,18 +27,18 @@ if (!empty($_GET['word'])) {
 }
 
 $sql = "SELECT * FROM books WHERE del_flg IS NULL {$selectWord} ORDER BY id DESC";
-$result = mysql_query($sql);
+$result = mysqli_query($link, $sql);
 if (!$result) {
-    die('クエリーが失敗しました。'.mysql_error());
+    die('クエリーが失敗しました。'.mysqli_error($link));
 }
 
 $datas = [];
-while ($tmp = mysql_fetch_assoc($result)) {
+while ($tmp = mysqli_fetch_assoc($result)) {
     if (!empty($tmp['name'])) {
         $datas[] = $tmp;
     }
 }
-mysql_close($link);
+mysqli_close($link);
 
 ?>
 <!DOCTYPE html>
@@ -64,19 +62,22 @@ mysql_close($link);
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">脆弱図書館</a>
+                <a class="navbar-brand" href="/">脆弱図書館</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="./">トップ</a></li>
+                    <li><a href="/">トップ</a></li>
                     <li class="active"><a href="search.php">検索</a></li>
                     <?php if ($isLogged):?>
-                    <li><a href="rent.php">借りた本一覧</a></li>
+                    <li><a href="rent.php?user_id=<?php echo $_SESSION['user']['id'];?>">借りた本一覧</a></li>
                     <?php endif;?>
                     <li><a href="contact.php">お問い合わせ</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <?php if ($isLogged):?>
+                        <li><?php if ($_SESSION['user']['is_admin']==1) echo '<a href="#">【管理者です】</a>'; ?></li>
+                        <li><a href="setting.php">アカウント更新</a></li>
+                        <?php if ($_SESSION['user']['is_admin']==1):?><li><a href="contact_admin.php">お問い合わせ一覧</a></li><?php endif;?>
                         <li class="active"><a href="logout.php">ログアウト <span class="sr-only">(current)</span></a></li>
                         <?php else:?>
                         <li><a href="login.php">ログイン</a></li>
@@ -85,17 +86,17 @@ mysql_close($link);
             </div><!--/.nav-collapse -->
         </div>
     </nav>
-    
+
     <div class="container">
 
         <div class="row">
-            <form name="searchForm" id="searchFrom" method="get" action="" class="form-inner">
+            <form name="searchForm" id="searchFrom" method="get" action="?" class="form-inner">
                 <?php // ここでwordのサニタイズ（無害化）を行わないとXSS（クロスサイトスクリプティング）につながる ?>
                 <input type="text" name="word" value="<?php echo $word;?>" class="" />
                 <input type="submit" value="検索" class="btn btn-primary" />
             </form>
         </div>
-        
+
         <table class="table table-striped table-bordered">
             <tr>
                 <th>タイトル</th>
@@ -112,7 +113,7 @@ mysql_close($link);
             </tr>
             <?php endforeach;?>
         </table>
-    
+
     </div> <!-- /container -->
 
 </body>
